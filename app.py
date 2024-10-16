@@ -203,6 +203,13 @@ def grade_to_points(grade):
     }
     return grade_map.get(grade, 0)
 
+# logging out i.e. deleting the session.
+@app.route('/logout')
+def logout():
+    # Logic to log out the user, e.g., clearing session data
+    session.pop('user_id', None)  # Assuming you're using sessions
+    return redirect(url_for('index'))  # Redirect to the login page
+
 
 if __name__ == '__main__':
     app.run(debug=True)
