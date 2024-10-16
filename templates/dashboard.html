@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard_styles.css') }}"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="welcome-message">Welcome, {{ user_name }}!</h1>
+        
+        <nav class="navigation-bar">
+            <ul>
+                <li><a href="/performance">Performance Tracker</a></li>
+                <li><a href="/todo">To-Do List</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </nav>
+        
+        <div class="info-section">
+            <h3>Quick Overview</h3>
+            
+            {% if semester_gpas %}
+                <h4>Your CGPA for each semester:</h4>
+                <ul>
+                    {% for semester, gpa in semester_gpas.items() %}
+                        <li>Semester {{ semester }} CGPA: {{ gpa }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No semesters found. Please add your course details in the Performance Tracker.</p>
+            {% endif %}
+            
+            <h4>Upcoming To-Dos:</h4>
+            <ul id="upcoming_todos">
+                <!-- Populate with upcoming tasks from the database -->
+            </ul>
+        </div>
+
+        <!-- Canvas for the CGPA chart -->
+        <h4>Your CGPA Progress</h4>
+        <canvas id="cgpaChart" width="400" height="200"></canvas>
+
+        <script>
+            const ctx = document.getElementById('cgpaChart').getContext('2d');
+            const labels = {{ semester_names | tojson }}; // Semesters for x-axis
+            const data = {{ cgpa_values | tojson }}; // CGPA values for y-axis
+            
+            const cgpaChart = new Chart(ctx, {
+                type: 'bar', // Change this to 'line' if you prefer a line chart
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'CGPA',
+                        data: data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'CGPA'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Semesters'
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>

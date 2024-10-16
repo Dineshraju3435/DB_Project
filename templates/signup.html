@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign-Up</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='styles.css')}}"/>
+    <script>
+        function validateEmail() {
+            const emailField = document.getElementById('email');
+            const emailPattern = /^[A-Za-z0-9]+@[a-z]+\.[a-z]{3}$/;
+            if (!emailPattern.test(emailField.value)) {
+                alert("Invalid email format! Please enter a valid email.");
+                return false;
+            }
+            return true;
+        }
+    </script>
+</head>
+<body>
+
+    <div class="container">
+         <!-- Display flash messages -->
+         {% with messages = get_flashed_messages() %}
+         {% if messages %}
+             <ul class="flashes">
+             {% for message in messages %}
+                 <li>{{ message }}</li>
+             {% endfor %}
+             </ul>
+         {% endif %}
+     {% endwith %}
+     
+        <h2>Sign Up</h2>
+        <form action="/signup" method="POST" onsubmit="return validateEmail()">
+            <label for="name">Full Name:</label>
+            <input type="text" id="name" name="name" required>
+            
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            
+            <label for="university_id">University ID:</label>
+            <input type="text" id="university_id" name="university_id" required>
+            
+            <label for="department">Department:</label>
+            <input type="text" id="department" name="department" required>
+            
+            <button type="submit">Sign Up</button>
+        </form>
+        <p>Already have an account? <a href="/login">Login here</a></p>
+    </div>
+</body>
+</html>
