@@ -44,7 +44,7 @@
         <canvas id="cgpaChart" width="400" height="200"></canvas>
 
         <script>
-            const ctx = document.getElementById('cgpaChart').getContext('2d');
+            const ctx = document.getElementById('cgpaChart').getContext('2d');  // no error
             const labels = {{ semester_names | tojson }}; // Semesters for x-axis
             const data = {{ cgpa_values | tojson }}; // CGPA values for y-axis
             
