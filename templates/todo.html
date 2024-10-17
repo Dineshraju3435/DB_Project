@@ -8,6 +8,9 @@
 </head>
 <body>
     <div class="container">
+        <!-- Button to return to the dashboard -->
+        <a href="{{ url_for('dashboard') }}" class="back-button">Back to Dashboard</a>
+        
         <h2>To-Do List</h2>
 
         <!-- Add new task form -->
@@ -29,10 +32,17 @@
                 <tr>
                     <td>{{ task['task'] }}</td>
                     <td>
+                        <!-- Complete task form -->
+                        <form action="{{ url_for('complete_task', task_id=task['_id']) }}" method="POST" style="display:inline-block;">
+                            <button type="submit" class="complete-btn" {% if task['is_completed'] %}disabled{% endif %}>
+                                {{ 'completed' if task['is_completed'] else 'Complete' }}
+                            </button>
+                        </form>
+
                         <!-- Update task form -->
                         <form action="{{ url_for('update_task', task_id=task['_id']) }}" method="POST" style="display:inline-block;">
                             <input type="text" name="new_task_name" value="{{ task['task'] }}" required>
-                            <button type="submit">Update</button>
+                            <button type="submit" {% if task['is_completed'] %}disabled{% endif %} class="update-btn">Update</button>
                         </form>
                         
                         <!-- Delete task form -->
@@ -45,5 +55,49 @@
             </tbody>
         </table>
     </div>
+
+    <style>
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: darkgrey;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .back-button:hover {
+            background-color: grey;
+        }
+        .complete-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .complete-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .update-btn {
+            background-color: #007bff; /* Default color */
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .update-btn:disabled {
+            background-color: #ccc; /* Color when disabled */
+            cursor: not-allowed;
+        }
+        .delete-btn {
+            background-color: #dc3545; /* Delete button color */
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+    </style>
 </body>
 </html>

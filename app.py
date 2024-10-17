@@ -189,10 +189,17 @@ def dashboard():
         semester_names = list(final_semester_gpas.keys())
         cgpa_values = list(final_semester_gpas.values())
 
+        # Retrieve completed tasks
+        completed_tasks = todos_collection.find({
+            'email': user_email,
+            'is_completed': True
+        })
+
         return render_template('dashboard.html', user_name=user_name,
                                semester_gpas=final_semester_gpas,
                                semester_names=semester_names,
-                               cgpa_values=cgpa_values)
+                               cgpa_values=cgpa_values,
+                               completed_tasks=completed_tasks)  # Pass completed tasks
 
     flash('User data not found.')
     return redirect(url_for('login'))
@@ -213,7 +220,7 @@ def todo():
             todos_collection.insert_one({
                 'email': user_email,  # Store the user's email
                 'task': task_name,
-                'status': 'pending'  # You can add more attributes here if needed
+                'is_completed': False  # New attribute to track completion status
             })
             flash('Task added successfully!')
 
@@ -246,6 +253,21 @@ def delete_task(task_id):
     flash('Task deleted successfully!')
     return redirect(url_for('todo'))
 
+@app.route("/complete_task/<task_id>", methods=['POST'])
+def complete_task(task_id):
+    # Toggle the completion status of the task
+    task = todos_collection.find_one({'_id': ObjectId(task_id)})
+
+    if task:
+        # Update the is_completed attribute based on the current status
+        new_status = not task.get('is_completed', False)
+        todos_collection.update_one(
+            {'_id': ObjectId(task_id)},
+            {'$set': {'is_completed': new_status}}
+        )
+        flash('Task completion status updated successfully!')
+
+    return redirect(url_for('todo'))
 def grade_to_points(grade):
     grade_map = {
         'O': 10,

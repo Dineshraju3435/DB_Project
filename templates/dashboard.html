@@ -16,7 +16,6 @@
                 <li><a href="/performance">Performance Tracker</a></li>
                 <li><a href="/todo">To-Do List</a></li>
                 <li><a href="/logout">Logout</a></li>
-
             </ul>
         </nav>
         
@@ -34,9 +33,13 @@
                 <p>No semesters found. Please add your course details in the Performance Tracker.</p>
             {% endif %}
             
-            <h4>Upcoming To-Dos:</h4>
+            <h4>Completed To-Dos:</h4>
             <ul id="upcoming_todos">
-                <!-- Populate with upcoming tasks from the database -->
+                {% for task in completed_tasks %}
+                    <li>{{ task['task'] }}</li>
+                {% else %}
+                    <li>No completed tasks found.</li>
+                {% endfor %}
             </ul>
         </div>
 
@@ -45,10 +48,10 @@
         <canvas id="cgpaChart" width="400" height="200"></canvas>
 
         <script>
-            const ctx = document.getElementById('cgpaChart').getContext('2d');  // no error
-            const labels = {{ semester_names | tojson }}; // Semesters for x-axis
-            const data = {{ cgpa_values | tojson }}; // CGPA values for y-axis
-            
+            const ctx = document.getElementById('cgpaChart').getContext('2d');
+            const labels = {{ semester_names | tojson | safe }}; // Semesters for x-axis
+            const data = {{ cgpa_values | tojson | safe }}; // CGPA values for y-axis
+        
             const cgpaChart = new Chart(ctx, {
                 type: 'bar', // Change this to 'line' if you prefer a line chart
                 data: {
@@ -79,9 +82,8 @@
                     }
                 }
             });
-
-        
         </script>
+        
     </div>
 </body>
 </html>
