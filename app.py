@@ -1,3 +1,4 @@
+from bson import ObjectId
 from flask import Flask, render_template, request, redirect, session, url_for, flash
 from pymongo import MongoClient
 import re
@@ -9,6 +10,7 @@ app.secret_key = 'your_secret_key'
 client = MongoClient('localhost', 27017)
 db = client['student_db']  # creating the database
 users = db['users']  # creating a collection for users
+todos_collection = db['todos'] #creating the collection fro todos
 
 # Email regex pattern
 EMAIL_REGEX = r'^[A-Za-z0-9]+@[a-z]+\.[a-z]{3}$'
@@ -24,6 +26,7 @@ def signup():
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
+        rollno = request.form['roll_no']
         university_id = request.form['university_id']
         department = request.form['department']
 
@@ -43,6 +46,7 @@ def signup():
             'name': name,
             'email': email,
             'password': password,
+            'rollno':rollno,
             'university_id': university_id,
             'department': department,
         })
@@ -138,6 +142,7 @@ def performance():
 
     return render_template('performance.html', semesters=semesters)
 
+# Route for dashboard page
 @app.route("/dashboard", methods=['GET', 'POST'])
 def dashboard():
     if 'user_email' not in session:
@@ -192,6 +197,55 @@ def dashboard():
     flash('User data not found.')
     return redirect(url_for('login'))
 
+@app.route("/todo", methods=['GET', 'POST'])
+def todo():
+    if 'user_email' not in session:
+        flash('You need to log in first.')
+        return redirect(url_for('login'))
+
+    user_email = session['user_email']
+
+    if request.method == 'POST':
+        task_name = request.form.get('task_name')
+
+        if task_name:
+            # Add task to the todos collection in the database
+            todos_collection.insert_one({
+                'email': user_email,  # Store the user's email
+                'task': task_name,
+                'status': 'pending'  # You can add more attributes here if needed
+            })
+            flash('Task added successfully!')
+
+        return redirect(url_for('todo'))
+
+    # Retrieve user's to-do tasks
+    user_todos = todos_collection.find({'email': user_email})  # Find tasks by user's email
+    todos = list(user_todos)  # Convert cursor to a list
+
+    return render_template('todo.html', todos=todos)
+
+@app.route("/update_task/<task_id>", methods=['POST'])
+def update_task(task_id):
+    new_task_name = request.form.get('new_task_name')
+
+    if new_task_name:
+        # Update the task in the database
+        todos_collection.update_one(
+            {'_id': ObjectId(task_id)},  # Match the task by its ID
+            {'$set': {'task': new_task_name}}  # Update the task field
+        )
+        flash('Task updated successfully!')
+
+    return redirect(url_for('todo'))
+
+@app.route("/delete_task/<task_id>", methods=['POST'])
+def delete_task(task_id):
+    # Delete the task from the database
+    todos_collection.delete_one({'_id': ObjectId(task_id)})
+    flash('Task deleted successfully!')
+    return redirect(url_for('todo'))
+
 def grade_to_points(grade):
     grade_map = {
         'O': 10,
@@ -207,9 +261,8 @@ def grade_to_points(grade):
 @app.route('/logout')
 def logout():
     # Logic to log out the user, e.g., clearing session data
-    session.pop('user_id', None)  # Assuming you're using sessions
+    session.pop('user_email', None)  # Assuming you're using sessions
     return redirect(url_for('index'))  # Redirect to the login page
-
 
 if __name__ == '__main__':
     app.run(debug=True)
