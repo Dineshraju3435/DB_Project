@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finance Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='finance_styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -65,6 +66,51 @@
             <h3>Semester Expenditure Analysis</h3>
             <p><strong>Semester with Maximum Expenditure:</strong> {{ max_semester }} - ${{ max_amount }}</p>
             <p><strong>Semester with Minimum Expenditure:</strong> {{ min_semester }} - ${{ min_amount }}</p>
+        </div>
+
+        <!-- Expenditure Graph -->
+        <div class="expenditure-graph">
+            <h3>Expenditure per Semester</h3>
+            <canvas id="expenditureChart" width="400" height="200"></canvas>
+            <script>
+                const ctx = document.getElementById('expenditureChart').getContext('2d');
+                const expenditureChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: {{ semesters | tojson }},
+                        datasets: [{
+                            label: 'Expenditure Amount ($)',
+                            data: {{ totals | tojson }},
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Amount ($)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Semester'
+                                }
+                            }
+                        },
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        }
+                    }
+                });
+            </script>
         </div>
     </div>
 </body>

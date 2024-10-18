@@ -303,18 +303,22 @@ def finance_tracker():
     # Retrieve expenditures from the finance_collection
     expenditures = list(finances_collection.find({'email': user_email}))
 
-    # Aggregation to calculate max and min expenditures per semester
+    # Aggregation to calculate total expenditures per semester
     pipeline = [
         {"$match": {"email": user_email}},  # Match the user
         {"$group": {
             "_id": "$semester",  # Group by semester
             "total": {"$sum": "$amount"}  # Sum the amounts
         }},
-        {"$sort": {"total": -1}}  # Sort by total expenditure descending
+        {"$sort": {"total": 1}}  # Sort by total expenditure ascending for graph purposes
     ]
 
     # Fetch the aggregated results
-    aggregation_result = finances_collection.aggregate(pipeline)
+    aggregation_result = list(finances_collection.aggregate(pipeline))
+
+    # Prepare data for the graph
+    semesters = [entry['_id'] for entry in aggregation_result]
+    totals = [entry['total'] for entry in aggregation_result]
 
     max_semester = None
     max_amount = 0
@@ -342,7 +346,9 @@ def finance_tracker():
         max_semester=max_semester,
         max_amount=max_amount,
         min_semester=min_semester,
-        min_amount=min_amount
+        min_amount=min_amount,
+        semesters=semesters,
+        totals=totals
     )
 
 @app.route("/add_expenditure", methods=['POST'])
