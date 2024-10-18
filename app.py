@@ -53,7 +53,7 @@ def signup():
         })
         
         flash('Sign-Up Successful! Please login.')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('login'))
 
     return render_template('signup.html')
 
