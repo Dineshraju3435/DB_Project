@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='finance_styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Button to return to the dashboard -->
+        <a href="{{ url_for('dashboard') }}" class="back-button">Back to Dashboard</a>
+        
+        <h2>Finance Tracker</h2>
+        
+        <!-- Expenditure Input Form -->
+        <form action="{{ url_for('add_expenditure') }}" method="POST" class="expenditure-form">
+            <label for="title">Expenditure Title</label>
+            <input type="text" id="title" name="title" placeholder="e.g. Books, Tuition Fee" required>
+            
+            <label for="amount">Amount</label>
+            <input type="number" id="amount" name="amount" placeholder="Enter amount" required>
+            
+            <label for="date">Date of Expenditure</label>
+            <input type="date" id="date" name="date" required>
+            
+            <label for="category">Category</label>
+            <select id="category" name="category" required>
+                <option value="Academic">Academic</option>
+                <option value="Personal">Personal</option>
+                <option value="Miscellaneous">Miscellaneous</option>
+            </select>
+
+            <label for="semester">Semester</label>
+            <select id="semester" name="semester" required>
+                <option value="Semester 1">Semester 1</option>
+                <option value="Semester 2">Semester 2</option>
+                <option value="Semester 3">Semester 3</option>
+                <option value="Semester 4">Semester 4</option>
+                <option value="Semester 5">Semester 5</option>
+                <option value="Semester 6">Semester 6</option>
+                <option value="Semester 7">Semester 7</option>
+                <option value="Semester 8">Semester 8</option>
+            </select>
+
+            <button type="submit" class="submit-btn">Add Expenditure</button>
+        </form>
+
+        <!-- Expenditure List -->
+        <div class="expenditure-list">
+            <h3>Your Expenditures</h3>
+            <ul>
+                {% for expenditure in expenditures %}
+                <li>
+                    {{ expenditure.title }} - ${{ expenditure.amount }} on {{ expenditure.date }} ({{ expenditure.category }}, {{ expenditure.semester }})
+                </li>
+                {% else %}
+                <li>No expenditures yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Semester Analysis -->
+        <div class="semester-analysis">
+            <h3>Semester Expenditure Analysis</h3>
+            <p><strong>Semester with Maximum Expenditure:</strong> {{ max_semester }} - ${{ max_amount }}</p>
+            <p><strong>Semester with Minimum Expenditure:</strong> {{ min_semester }} - ${{ min_amount }}</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -7,10 +7,11 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # MongoDB connection
-client = MongoClient('localhost', 27017)
+client = MongoClient('localhost', 27031)
 db = client['student_db']  # creating the database
 users = db['users']  # creating a collection for users
 todos_collection = db['todos'] #creating the collection fro todos
+finances_collection = db['finances']  # Creating the collection for finances
 
 # Email regex pattern
 EMAIL_REGEX = r'^[A-Za-z0-9]+@[a-z]+\.[a-z]{3}$'
@@ -91,6 +92,8 @@ def performance():
 
     if request.method == 'POST':
         semester = request.form.get('semester')
+        session['current_semester'] = semester  # Store the current semester in session
+        
         num_courses = int(request.form.get('num_courses', 0))
 
         courses = []
@@ -129,8 +132,7 @@ def performance():
         # Update the user's courses and CGPA in the database
         users.update_one(
             {'email': user_email},
-            {'$push': {'semesters': {'semester': semester, 'cgpa': cgpa, 'courses': courses}}},
-            upsert=True
+            {'$push': {'semesters': {'semester': semester, 'cgpa': cgpa, 'courses': courses}}}
         )
 
         flash('Courses added/updated successfully!')
@@ -268,6 +270,109 @@ def complete_task(task_id):
         flash('Task completion status updated successfully!')
 
     return redirect(url_for('todo'))
+
+@app.route("/finance_tracker", methods=['GET', 'POST'])
+def finance_tracker():
+    if 'user_email' not in session:
+        flash('You need to log in first.')
+        return redirect(url_for('login'))
+
+    user_email = session['user_email']
+
+    if request.method == 'POST':
+        # This block handles adding a new expenditure
+        title = request.form.get('title')
+        amount = request.form.get('amount')
+        date = request.form.get('date')
+        category = request.form.get('category')
+        semester = request.form.get('semester')
+
+        if title and amount and date and category and semester:
+            # Insert the expenditure into the finance_collection
+            finances_collection.insert_one({
+                'email': user_email,
+                'title': title,
+                'amount': float(amount),
+                'date': date,
+                'category': category,
+                'semester': semester
+            })
+            flash('Expenditure added successfully!')
+            return redirect(url_for('finance_tracker'))
+
+    # Retrieve expenditures from the finance_collection
+    expenditures = list(finances_collection.find({'email': user_email}))
+
+    # Aggregation to calculate max and min expenditures per semester
+    pipeline = [
+        {"$match": {"email": user_email}},  # Match the user
+        {"$group": {
+            "_id": "$semester",  # Group by semester
+            "total": {"$sum": "$amount"}  # Sum the amounts
+        }},
+        {"$sort": {"total": -1}}  # Sort by total expenditure descending
+    ]
+
+    # Fetch the aggregated results
+    aggregation_result = finances_collection.aggregate(pipeline)
+
+    max_semester = None
+    max_amount = 0
+    min_semester = None
+    min_amount = float('inf')
+
+    # Determine max and min semester expenditures from the aggregation result
+    for entry in aggregation_result:
+        if entry['total'] > max_amount:
+            max_amount = entry['total']
+            max_semester = entry['_id']
+        if entry['total'] < min_amount:
+            min_amount = entry['total']
+            min_semester = entry['_id']
+
+    # Handle the case where there are no expenditures
+    if max_semester is None:
+        max_semester = min_semester = "N/A"
+        max_amount = min_amount = 0
+
+    # Render the finance tracker page with expenditures and analysis
+    return render_template(
+        'finance_tracker.html',
+        expenditures=expenditures,
+        max_semester=max_semester,
+        max_amount=max_amount,
+        min_semester=min_semester,
+        min_amount=min_amount
+    )
+
+@app.route("/add_expenditure", methods=['POST'])
+def add_expenditure():
+    if 'user_email' not in session:
+        flash('You need to log in first.')
+        return redirect(url_for('login'))
+
+    title = request.form.get('title')
+    amount = request.form.get('amount')
+    date = request.form.get('date')
+    category = request.form.get('category')
+    semester = request.form.get('semester')  # Retrieve semester from the form
+
+    user_email = session['user_email']
+
+    # Insert the expenditure into the finance_collection
+    finances_collection.insert_one({
+        'email': user_email,
+        'title': title,
+        'amount': float(amount),
+        'date': date,
+        'category': category,
+        'semester': semester  # Add the current semester to the finance record
+    })
+
+    flash('Expenditure added successfully!')
+    return redirect(url_for('finance_tracker'))
+
+
 def grade_to_points(grade):
     grade_map = {
         'O': 10,
